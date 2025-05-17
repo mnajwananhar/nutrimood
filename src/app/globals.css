@@ -22,5 +22,168 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+}
+
+/* Kustom class untuk warna tema */
+.text-primary {
+  color: var(--color-primary);
+}
+
+.bg-primary {
+  background-color: var(--color-primary);
+}
+
+.text-secondary {
+  color: var(--color-secondary);
+}
+
+.bg-secondary {
+  background-color: var(--color-secondary);
+}
+
+.text-accent {
+  color: var(--color-accent);
+}
+
+.bg-accent {
+  background-color: var(--color-accent);
+}
+
+/* Warna untuk mood */
+.text-mood-happy {
+  color: var(--color-mood-happy);
+}
+
+.bg-mood-happy {
+  background-color: var(--color-mood-happy);
+}
+
+.text-mood-neutral {
+  color: var(--color-mood-neutral);
+}
+
+.bg-mood-neutral {
+  background-color: var(--color-mood-neutral);
+}
+
+.text-mood-sad {
+  color: var(--color-mood-sad);
+}
+
+.bg-mood-sad {
+  background-color: var(--color-mood-sad);
+}
+
+/* Gradien khusus */
+.bg-gradient-primary {
+  background: linear-gradient(
+    to right,
+    var(--color-primary),
+    var(--color-primary-light)
+  );
+}
+
+.bg-gradient-accent {
+  background: linear-gradient(
+    to right,
+    var(--color-accent),
+    var(--color-secondary)
+  );
+}
+
+/* Animasi transisi untuk perubahan tema */
+* {
+  transition: background-color 0.3s, border-color 0.3s;
+}
+
+/* Override untuk tailwind dark mode */
+.dark body {
+  @apply bg-neutral-950 text-white;
+}
+
+/* Styling untuk scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 5px;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: #2d3748;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #4a5568;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #718096;
+}
+
+/* Style untuk focus outline yang lebih baik untuk aksesibilitas */
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Motion-safe animations */
+@media (prefers-reduced-motion: no-preference) {
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-in-out;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.5s ease-out;
+  }
+
+  .animate-bounce-in {
+    animation: bounceIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes slideUp {
+    from {
+      transform: translateY(20px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes bounceIn {
+    0% {
+      transform: scale(0.8);
+      opacity: 0;
+    }
+    70% {
+      transform: scale(1.05);
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
 }
