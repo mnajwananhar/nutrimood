@@ -112,3 +112,77 @@ export const getFoodRecommendations = async (moodId, healthConditions) => {
   if (error) throw error;
   return data;
 };
+
+// Food Journal functions
+export const getFoodJournalEntries = async (userId) => {
+  const { data, error } = await supabase
+    .from("food_journal")
+    .select("*")
+    .eq("user_id", userId)
+    .order("date", { ascending: false })
+    .order("time", { ascending: false });
+
+  if (error) throw error;
+  return data;
+};
+
+export const addFoodJournalEntry = async (entry) => {
+  const { data, error } = await supabase
+    .from("food_journal")
+    .insert([{
+      ...entry,
+      user_id: (await getUser()).id
+    }])
+    .select();
+
+  if (error) throw error;
+  return data;
+};
+
+export const deleteFoodJournalEntry = async (entryId) => {
+  const { error } = await supabase
+    .from("food_journal")
+    .delete()
+    .eq("id", entryId);
+
+  if (error) throw error;
+  return true;
+};
+
+// Food Recommendations functions
+export const getRecommendationsByMood = async (mood) => {
+  const { data, error } = await supabase
+    .from("food_recommendations")
+    .select("*")
+    .eq("mood", mood)
+    .limit(3);
+
+  if (error) throw error;
+  return data;
+};
+
+export const saveRecommendationToFavorites = async (userId, recommendationId) => {
+  const { data, error } = await supabase
+    .from("user_favorites")
+    .insert([{
+      user_id: userId,
+      recommendation_id: recommendationId
+    }])
+    .select();
+
+  if (error) throw error;
+  return data;
+};
+
+export const getUserFavorites = async (userId) => {
+  const { data, error } = await supabase
+    .from("user_favorites")
+    .select(`
+      *,
+      food_recommendations:recommendation_id (*)
+    `)
+    .eq("user_id", userId);
+
+  if (error) throw error;
+  return data;
+};
