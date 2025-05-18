@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
 export default function Login() {
   const router = useRouter();
@@ -20,10 +20,12 @@ export default function Login() {
   useEffect(() => {
     // Cek apakah user sudah login
     const checkUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (session) {
-        const redirectedFrom = searchParams.get('redirectedFrom');
-        router.push(redirectedFrom || '/dashboard');
+        const redirectedFrom = searchParams.get("redirectedFrom");
+        router.push(redirectedFrom || "/dashboard");
       }
     };
     checkUser();
@@ -49,13 +51,16 @@ export default function Login() {
       if (signInError) throw signInError;
 
       // Tunggu session tersedia
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
       if (sessionError) throw sessionError;
-      if (!session) throw new Error('No session available after sign in');
+      if (!session) throw new Error("No session available after sign in");
 
       // Redirect ke halaman yang diminta atau dashboard
-      const redirectedFrom = searchParams.get('redirectedFrom');
-      router.push(redirectedFrom || '/dashboard');
+      const redirectedFrom = searchParams.get("redirectedFrom");
+      router.push(redirectedFrom || "/dashboard");
     } catch (error) {
       console.error("Login error:", error.message);
 
@@ -197,12 +202,12 @@ export default function Login() {
             </div>
 
             <div className="text-sm">
-              <a
-                href="#"
+              <Link
+                href="/forgot-password"
                 className="font-medium text-primary-600 hover:text-primary-500 dark:text-primary-500 dark:hover:text-primary-400"
               >
                 Lupa password?
-              </a>
+              </Link>
             </div>
           </div>
 

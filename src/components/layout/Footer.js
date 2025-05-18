@@ -77,7 +77,7 @@ export default function Footer() {
             <ul className="mt-4 space-y-4">
               <li>
                 {/* Beranda: jika sudah di halaman /, klik hanya scroll ke atas tanpa refresh/navigate. Jika di halaman lain, tetap navigate ke /. */}
-                <a
+                <Link
                   href="/"
                   className="text-base text-gray-500 hover:text-primary-600 dark:text-gray-400 dark:hover:text-primary-400"
                   onClick={(e) => {
@@ -91,7 +91,7 @@ export default function Footer() {
                   }}
                 >
                   Beranda
-                </a>
+                </Link>
               </li>
               <li>
                 <a
@@ -165,12 +165,12 @@ export default function Footer() {
                 </a>
               </li>
               <li>
-                <a
+                <Link
                   href="/education"
                   className="text-base text-gray-500 hover:text-primary-600 dark:text-gray-400 dark:hover:text-primary-400"
                 >
                   Materi Edukasi
-                </a>
+                </Link>
               </li>
               <li>
                 <a
