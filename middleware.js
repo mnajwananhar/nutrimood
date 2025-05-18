@@ -1,24 +1,13 @@
-import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs';
-import { NextResponse } from 'next/server';
+// !!PERHATIAN: File ini telah dinonaktifkan, gunakan src/middleware.js untuk authentikasi!!
+// Kedua middleware TIDAK dapat dijalankan bersamaan karena akan menyebabkan konflik
 
+// Fungsi dummy yang tidak melakukan apa-apa
 export async function middleware(req) {
-    const res = NextResponse.next();
-    const supabase = createMiddlewareClient({ req, res });
-
-    const {
-        data: { session },
-    } = await supabase.auth.getSession();
-
-    // Jika user belum login dan mencoba mengakses halaman yang membutuhkan autentikasi
-    if (!session &&
-        (req.nextUrl.pathname.startsWith('/dashboard') ||
-            req.nextUrl.pathname.startsWith('/recommendation/result'))) {
-        return NextResponse.redirect(new URL('/login', req.url));
-    }
-
-    return res;
+  // Middleware ini dinonaktifkan total, gunakan src/middleware.js
+  return null;
 }
 
+// Config kosong agar tidak menangkap rute apapun
 export const config = {
-    matcher: ['/dashboard/:path*', '/recommendation/result/:path*'],
-}; 
+  matcher: [], // Kosongkan matcher agar middleware ini tidak aktif sama sekali
+};

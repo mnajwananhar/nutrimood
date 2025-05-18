@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
 const healthConditions = [
   { id: "diabetes", name: "Diabetes" },
@@ -81,41 +81,72 @@ export default function RecommendationForm() {
     setError("");
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) {
-        router.push('/login');
+        router.push("/login");
         return;
-      }
+      } // Mapping mood dari bahasa Indonesia ke bahasa Inggris
+      const moodMap = {
+        senang: "happy",
+        netral: "neutral", // tambahkan 'neutral' ke database juga
+        sedih: "sad",
+      };
 
-      // Menyimpan mood ke database
-      const { error: saveError } = await supabase
-        .from('food_journal')
-        .insert([
-          {
-            user_id: user.id,
-            date: new Date().toISOString().split('T')[0],
-            time: new Date().toTimeString().slice(0, 5),
-            mood: mood,
-            foods: []
-          }
-        ]);
+      const englishMood = moodMap[mood];
 
-      if (saveError) throw saveError;
+      // Tidak perlu menyimpan ke food_journal dulu
+      // Karena food_journal harus berisi informasi makanan yang lengkap
+      // Kita akan menyimpannya nanti setelah user memilih makanannya
 
-      // Mengambil rekomendasi berdasarkan mood
-      const { data: recommendations, error: recError } = await supabase
-        .from('food_recommendations')
-        .select('*')
-        .eq('mood', mood)
+      console.log(
+        "Mengambil rekomendasi untuk mood:",
+        mood,
+        "(",
+        englishMood,
+        ")"
+      ); // Mengambil rekomendasi berdasarkan mood (coba dalam bahasa Indonesia dan Inggris)
+      let { data: recommendations, error: recError } = await supabase
+        .from("food_recommendations")
+        .select("*")
+        .eq("mood", mood)
         .limit(3);
 
-      if (recError) throw recError;
+      // Jika tidak ada hasil dengan mood bahasa Indonesia, coba dengan bahasa Inggris
+      if ((!recommendations || recommendations.length === 0) && englishMood) {
+        const { data: engRecommendations, error: engError } = await supabase
+          .from("food_recommendations")
+          .select("*")
+          .eq("mood", englishMood)
+          .limit(3);
+
+        if (!engError && engRecommendations && engRecommendations.length > 0) {
+          recommendations = engRecommendations;
+          recError = null;
+        }
+      }
+
+      // Log untuk debugging
+      console.log("Recommendations found:", recommendations?.length || 0);
+
+      if (recError) {
+        console.error("Error fetching recommendations:", recError);
+        throw recError;
+      }
+      // Bahkan jika tidak ada rekomendasi, tetap lanjutkan ke halaman result
+      // Halaman result akan menangani kasus tidak ada data dengan data sampel statis
+      if (!recommendations || recommendations.length === 0) {
+        console.log(
+          "Tidak ada rekomendasi di database, akan menggunakan data sampel di halaman result"
+        );
+      }
 
       // Navigate ke halaman hasil dengan data rekomendasi
-      router.push('/recommendation/result?mood=' + mood);
+      router.push("/recommendation/result?mood=" + mood);
     } catch (error) {
-      console.error('Error submitting form:', error);
-      setError('Terjadi kesalahan. Silakan coba lagi.');
+      console.error("Error submitting form:", error);
+      setError("Terjadi kesalahan. Silakan coba lagi.");
     } finally {
       setIsSubmitting(false);
     }
@@ -123,14 +154,14 @@ export default function RecommendationForm() {
 
   const getMoodColor = (moodType) => {
     switch (moodType) {
-      case 'senang':
-        return 'bg-green-100 border-green-500 text-green-800 dark:bg-green-900 dark:border-green-600 dark:text-green-300';
-      case 'netral':
-        return 'bg-yellow-100 border-yellow-500 text-yellow-800 dark:bg-yellow-900 dark:border-yellow-600 dark:text-yellow-300';
-      case 'sedih':
-        return 'bg-red-100 border-red-500 text-red-800 dark:bg-red-900 dark:border-red-600 dark:text-red-300';
+      case "senang":
+        return "bg-green-100 border-green-500 text-green-800 dark:bg-green-900 dark:border-green-600 dark:text-green-300";
+      case "netral":
+        return "bg-yellow-100 border-yellow-500 text-yellow-800 dark:bg-yellow-900 dark:border-yellow-600 dark:text-yellow-300";
+      case "sedih":
+        return "bg-red-100 border-red-500 text-red-800 dark:bg-red-900 dark:border-red-600 dark:text-red-300";
       default:
-        return 'bg-gray-100 border-gray-500 text-gray-800 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300';
+        return "bg-gray-100 border-gray-500 text-gray-800 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300";
     }
   };
 
@@ -146,26 +177,33 @@ export default function RecommendationForm() {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-white dark:bg-neutral-800 shadow-md rounded-lg p-6 mb-8">
+        <form
+          onSubmit={handleSubmit}
+          className="bg-white dark:bg-neutral-800 shadow-md rounded-lg p-6 mb-8"
+        >
           <div className="space-y-6">
             <div>
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
                 Bagaimana perasaanmu hari ini?
               </h2>
               <div className="grid grid-cols-3 gap-4">
-                {['senang', 'netral', 'sedih'].map((moodType) => (
+                {["senang", "netral", "sedih"].map((moodType) => (
                   <button
                     key={moodType}
                     type="button"
-                    className={`${mood === moodType
-                      ? `${getMoodColor(moodType)} border-2`
-                      : 'bg-gray-50 hover:bg-gray-100 dark:bg-neutral-700 dark:hover:bg-neutral-600'
-                      } p-4 rounded-lg flex flex-col items-center justify-center transition-all`}
+                    className={`${
+                      mood === moodType
+                        ? `${getMoodColor(moodType)} border-2`
+                        : "bg-gray-50 hover:bg-gray-100 dark:bg-neutral-700 dark:hover:bg-neutral-600"
+                    } p-4 rounded-lg flex flex-col items-center justify-center transition-all`}
                     onClick={() => handleMoodSelect(moodType)}
                   >
                     <span className="text-4xl mb-2">
-                      {moodType === 'senang' ? '😊' :
-                        moodType === 'netral' ? '😐' : '😔'}
+                      {moodType === "senang"
+                        ? "😊"
+                        : moodType === "netral"
+                        ? "😐"
+                        : "😔"}
                     </span>
                     <span className="text-sm font-medium capitalize">
                       {moodType}
@@ -185,12 +223,13 @@ export default function RecommendationForm() {
               <button
                 type="submit"
                 disabled={!mood || isSubmitting}
-                className={`px-6 py-3 rounded-md text-white font-medium ${!mood || isSubmitting
-                  ? 'bg-gray-400 cursor-not-allowed'
-                  : 'bg-primary-600 hover:bg-primary-700'
-                  }`}
+                className={`px-6 py-3 rounded-md text-white font-medium ${
+                  !mood || isSubmitting
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-primary-600 hover:bg-primary-700"
+                }`}
               >
-                {isSubmitting ? 'Memproses...' : 'Dapatkan Rekomendasi'}
+                {isSubmitting ? "Memproses..." : "Dapatkan Rekomendasi"}
               </button>
             </div>
           </div>

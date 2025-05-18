@@ -1,19 +1,33 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { signIn } from "@/lib/supabase";
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
 export default function Login() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const supabase = createClientComponentClient();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+
+  useEffect(() => {
+    // Cek apakah user sudah login
+    const checkUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        const redirectedFrom = searchParams.get('redirectedFrom');
+        router.push(redirectedFrom || '/dashboard');
+      }
+    };
+    checkUser();
+  }, [router, searchParams, supabase.auth]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -27,10 +41,21 @@ export default function Login() {
       }
 
       // Attempt to sign in
-      await signIn({ email, password });
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-      // Redirect to dashboard on success
-      router.push("/dashboard");
+      if (signInError) throw signInError;
+
+      // Tunggu session tersedia
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) throw sessionError;
+      if (!session) throw new Error('No session available after sign in');
+
+      // Redirect ke halaman yang diminta atau dashboard
+      const redirectedFrom = searchParams.get('redirectedFrom');
+      router.push(redirectedFrom || '/dashboard');
     } catch (error) {
       console.error("Login error:", error.message);
 
