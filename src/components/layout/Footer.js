@@ -4,7 +4,10 @@ export default function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-white dark:bg-neutral-900 border-t border-gray-200 dark:border-neutral-800">
+    <footer
+      id="contact"
+      className="bg-white dark:bg-neutral-900 border-t border-gray-200 dark:border-neutral-800"
+    >
       <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
         {/* Footer grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -70,35 +73,76 @@ export default function Footer() {
             <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-200 tracking-wider uppercase">
               Menu
             </h3>
+            {/* Footer menu links: update Fitur, Kontak to anchor scroll, and Tentang Kami to #how-it-works */}
             <ul className="mt-4 space-y-4">
               <li>
-                <Link
+                {/* Beranda: jika sudah di halaman /, klik hanya scroll ke atas tanpa refresh/navigate. Jika di halaman lain, tetap navigate ke /. */}
+                <a
                   href="/"
                   className="text-base text-gray-500 hover:text-primary-600 dark:text-gray-400 dark:hover:text-primary-400"
+                  onClick={(e) => {
+                    if (
+                      typeof window !== "undefined" &&
+                      window.location.pathname === "/"
+                    ) {
+                      e.preventDefault();
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+                    }
+                  }}
                 >
                   Beranda
-                </Link>
+                </a>
               </li>
               <li>
                 <a
-                  href="/about"
+                  href="#how-it-works"
                   className="text-base text-gray-500 hover:text-primary-600 dark:text-gray-400 dark:hover:text-primary-400"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (window.location.pathname === "/") {
+                      const el = document.getElementById("how-it-works");
+                      if (el) el.scrollIntoView({ behavior: "smooth" });
+                    } else {
+                      window.location.href = "/#how-it-works";
+                    }
+                  }}
                 >
                   Tentang Kami
                 </a>
               </li>
               <li>
                 <a
-                  href="/features"
+                  href="#features"
                   className="text-base text-gray-500 hover:text-primary-600 dark:text-gray-400 dark:hover:text-primary-400"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (window.location.pathname === "/") {
+                      const el = document.getElementById("features");
+                      if (el) el.scrollIntoView({ behavior: "smooth" });
+                    } else {
+                      window.location.href = "/#features";
+                    }
+                  }}
                 >
                   Fitur
                 </a>
               </li>
               <li>
                 <a
-                  href="/contact"
+                  href="#contact"
                   className="text-base text-gray-500 hover:text-primary-600 dark:text-gray-400 dark:hover:text-primary-400"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    // Scroll to footer (contact section is the footer itself)
+                    if (window.location.pathname === "/") {
+                      window.scrollTo({
+                        top: document.body.scrollHeight,
+                        behavior: "smooth",
+                      });
+                    } else {
+                      window.location.href = "/#contact";
+                    }
+                  }}
                 >
                   Kontak
                 </a>

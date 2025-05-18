@@ -368,10 +368,38 @@ export default function Header() {
   // Link untuk pengguna yang belum login
   const publicLinks = [
     { name: "Beranda", href: "/" },
-    { name: "Tentang", href: "/about" },
-    { name: "Fitur", href: "/#features" },
-    { name: "Kontak", href: "/contact" },
+    { name: "Fitur", href: "#features" },
+    { name: "Tentang", href: "#how-it-works" },
+    { name: "Kontak", href: "#contact" },
   ];
+
+  // Helper: scroll to section or navigate to landing page with hash
+  function getActiveHash(href) {
+    if (typeof window === "undefined") return false;
+    if (!href.startsWith("#")) return false;
+    return window.location.hash === href;
+  }
+  function handlePublicNavClick(e, href) {
+    if (!href.startsWith("#")) return; // Only handle anchor links
+    e.preventDefault();
+    const sectionId = href.replace("#", "");
+    if (window.location.pathname === "/") {
+      // On landing page: smooth scroll
+      const el = document.getElementById(sectionId);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth" });
+      } else if (sectionId === "contact") {
+        window.scrollTo({
+          top: document.body.scrollHeight,
+          behavior: "smooth",
+        });
+      }
+    } else {
+      // Not on landing: go to landing with hash
+      window.location.href = `/${href}`;
+    }
+  }
+
   // Link untuk pengguna yang sudah login
   const authLinks = [
     { name: "Dashboard", href: "/dashboard" },
@@ -401,44 +429,45 @@ export default function Header() {
                   <Link
                     key={link.name}
                     href={link.href}
-                    className={`inline-flex items-center px-1 pt-1 text-sm font-medium border-b-2 ${
-                      pathname === link.href
-                        ? "border-primary-500 text-primary-600 dark:text-primary-400"
-                        : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-300 dark:hover:text-white dark:hover:border-gray-700"
-                    }`}
+                    className="inline-flex items-center px-1 pt-1 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-300 dark:hover:text-white dark:hover:border-gray-700"
                   >
                     {link.name}
                   </Link>
                 ))
-              : !isClient || isLoading
-              ? // Selama pre-render atau loading, tampilkan link publik sebagai fallback
-                publicLinks.map((link) => (
-                  <Link
-                    key={link.name}
-                    href={link.href}
-                    className={`inline-flex items-center px-1 pt-1 text-sm font-medium border-b-2 ${
-                      pathname === link.href
-                        ? "border-primary-500 text-primary-600 dark:text-primary-400"
-                        : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-300 dark:hover:text-white dark:hover:border-gray-700"
-                    }`}
-                  >
-                    {link.name}
-                  </Link>
-                ))
-              : // Setelah loading selesai dan user dipastikan tidak ada, tampilkan link publik
-                publicLinks.map((link) => (
-                  <Link
-                    key={link.name}
-                    href={link.href}
-                    className={`inline-flex items-center px-1 pt-1 text-sm font-medium border-b-2 ${
-                      pathname === link.href
-                        ? "border-primary-500 text-primary-600 dark:text-primary-400"
-                        : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-300 dark:hover:text-white dark:hover:border-gray-700"
-                    }`}
-                  >
-                    {link.name}
-                  </Link>
-                ))}
+              : (!isClient || isLoading ? publicLinks : publicLinks).map(
+                  (link) =>
+                    link.href === "/" ? (
+                      <a
+                        key={link.name}
+                        href={link.href}
+                        onClick={(e) => {
+                          if (
+                            typeof window !== "undefined" &&
+                            window.location.pathname === "/"
+                          ) {
+                            e.preventDefault();
+                            window.scrollTo({ top: 0, behavior: "smooth" });
+                          }
+                        }}
+                        className="inline-flex items-center px-1 pt-1 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-300 dark:hover:text-white dark:hover:border-gray-700"
+                      >
+                        {link.name}
+                      </a>
+                    ) : (
+                      <a
+                        key={link.name}
+                        href={link.href}
+                        onClick={
+                          link.href.startsWith("#")
+                            ? (e) => handlePublicNavClick(e, link.href)
+                            : undefined
+                        }
+                        className="inline-flex items-center px-1 pt-1 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-300 dark:hover:text-white dark:hover:border-gray-700"
+                      >
+                        {link.name}
+                      </a>
+                    )
+                )}
           </nav>{" "}
           {/* Authentication Buttons */}
           <div className="hidden md:flex md:items-center md:space-x-4">
@@ -539,47 +568,50 @@ export default function Header() {
                   <Link
                     key={link.name}
                     href={link.href}
-                    className={`block px-3 py-2 rounded-md text-base font-medium ${
-                      pathname === link.href
-                        ? "bg-primary-50 text-primary-600 dark:bg-primary-900/20 dark:text-primary-400"
-                        : "text-gray-700 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-200 dark:hover:bg-gray-800 dark:hover:text-white"
-                    }`}
+                    className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-200 dark:hover:bg-gray-800 dark:hover:text-white"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     {link.name}
                   </Link>
                 ))
-              : !isClient || isLoading
-              ? // Selama pre-render atau loading, tunjukkan placeholder
-                publicLinks.map((link) => (
-                  <Link
-                    key={link.name}
-                    href={link.href}
-                    className={`block px-3 py-2 rounded-md text-base font-medium ${
-                      pathname === link.href
-                        ? "bg-primary-50 text-primary-600 dark:bg-primary-900/20 dark:text-primary-400"
-                        : "text-gray-700 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-200 dark:hover:bg-gray-800 dark:hover:text-white"
-                    }`}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    {link.name}
-                  </Link>
-                ))
-              : // Setelah loading selesai, tampilkan link publik
-                publicLinks.map((link) => (
-                  <Link
-                    key={link.name}
-                    href={link.href}
-                    className={`block px-3 py-2 rounded-md text-base font-medium ${
-                      pathname === link.href
-                        ? "bg-primary-50 text-primary-600 dark:bg-primary-900/20 dark:text-primary-400"
-                        : "text-gray-700 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-200 dark:hover:bg-gray-800 dark:hover:text-white"
-                    }`}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    {link.name}
-                  </Link>
-                ))}
+              : (!isClient || isLoading ? publicLinks : publicLinks).map(
+                  (link) =>
+                    link.href === "/" ? (
+                      <a
+                        key={link.name}
+                        href={link.href}
+                        onClick={(e) => {
+                          if (
+                            typeof window !== "undefined" &&
+                            window.location.pathname === "/"
+                          ) {
+                            e.preventDefault();
+                            window.scrollTo({ top: 0, behavior: "smooth" });
+                          }
+                          setIsMenuOpen(false);
+                        }}
+                        className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-200 dark:hover:bg-gray-800 dark:hover:text-white"
+                      >
+                        {link.name}
+                      </a>
+                    ) : (
+                      <a
+                        key={link.name}
+                        href={link.href}
+                        onClick={
+                          link.href.startsWith("#")
+                            ? (e) => {
+                                handlePublicNavClick(e, link.href);
+                                setIsMenuOpen(false);
+                              }
+                            : () => setIsMenuOpen(false)
+                        }
+                        className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-200 dark:hover:bg-gray-800 dark:hover:text-white"
+                      >
+                        {link.name}
+                      </a>
+                    )
+                )}
             {/* Mobile Authentication Buttons */}
             <div className="pt-4 pb-3 border-t border-gray-200 dark:border-gray-700">
               {isClient && isLoading ? (

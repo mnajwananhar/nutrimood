@@ -32,6 +32,7 @@ export default function Home() {
                   </Link>
                   <Link
                     href="#features"
+                    scroll={true}
                     className="flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-primary-600 bg-white border-primary-500 hover:bg-gray-50 dark:bg-transparent dark:text-primary-400 dark:border-primary-500 dark:hover:bg-primary-900/20 md:py-4 md:text-lg md:px-8 transition-all"
                   >
                     Pelajari Lebih Lanjut
@@ -88,6 +89,15 @@ export default function Home() {
             <div className="inline-flex rounded-md shadow">
               <Link
                 href="/register"
+                className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-primary-600 bg-white hover:bg-gray-50"
+              >
+                Daftar Sekarang
+              </Link>
+            </div>
+            <div className="ml-3 inline-flex rounded-md shadow">
+              <Link
+                href="#how-it-works"
+                scroll={true}
                 className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-primary-600 bg-white hover:bg-gray-50"
               >
                 Daftar Sekarang
