@@ -18,6 +18,78 @@ export const supabase = createClient(
 );
 
 // Autentikasi helper functions
+// Function to refresh session token - used to prevent auth errors
+// Track last refresh time to prevent excessive refreshes
+let lastRefreshAttempt = 0;
+let refreshInProgress = false;
+const MIN_REFRESH_INTERVAL = 3000; // 3 seconds minimum between refresh attempts
+
+export const refreshSession = async () => {
+  // Prevent multiple simultaneous refresh attempts
+  if (refreshPromise) {
+    console.log(
+      "[AUTH DEBUG] Already refreshing session, returning existing promise"
+    );
+    return refreshPromise;
+  }
+
+  // Check if we've tried to refresh too recently
+  const now = Date.now();
+  if (now - lastRefreshAttempt < MIN_REFRESH_INTERVAL) {
+    console.log("[AUTH DEBUG] Refresh attempted too soon, skipping");
+    return cachedUser; // Return cached user if available
+  }
+
+  // Set flag to track refresh attempt time
+  lastRefreshAttempt = now;
+  refreshInProgress = true;
+
+  try {
+    console.log("[AUTH DEBUG] Refreshing session token");
+    refreshPromise = supabase.auth.refreshSession();
+    const { data, error } = await refreshPromise;
+
+    if (error) {
+      console.error("[AUTH DEBUG] Error refreshing session:", error);
+
+      // Check for specific error types
+      if (error.message?.includes("Session expired")) {
+        console.log("[AUTH DEBUG] Session has expired, clearing auth state");
+        resetAuthState();
+      }
+
+      return null;
+    }
+
+    console.log("[AUTH DEBUG] Session refreshed successfully");
+    if (data.session && data.user) {
+      cachedUser = data.user;
+      lastFetchTime = Date.now();
+
+      // Update localStorage cache
+      if (typeof window !== "undefined") {
+        localStorage.setItem(
+          "nutrimood_user",
+          JSON.stringify({
+            user: data.user,
+            timestamp: Date.now(),
+          })
+        );
+        sessionStorage.setItem("nutrimood_logged_in", "true");
+      }
+
+      return data.user;
+    }
+    return null;
+  } catch (error) {
+    console.error("[AUTH DEBUG] Exception refreshing session:", error);
+    return null;
+  } finally {
+    refreshPromise = null;
+    refreshInProgress = false;
+  }
+};
+
 export const signIn = async ({ email, password }) => {
   try {
     const { data, error } = await supabase.auth.signInWithPassword({
@@ -94,7 +166,31 @@ export const signOut = async () => {
 // Menyimpan user session dalam memori untuk mengurangi API calls
 let cachedUser = null;
 let lastFetchTime = 0;
+let refreshPromise = null;
 const CACHE_TTL = 10000; // 10 detik - lebih agresif untuk UI yang responsif
+
+// Setup session refresh handler
+supabase.auth.onAuthStateChange((event, session) => {
+  console.log("[AUTH DEBUG] Auth state change event:", event);
+  if (event === "TOKEN_REFRESHED") {
+    console.log("[AUTH DEBUG] Token refreshed successfully");
+    if (session && session.user) {
+      cachedUser = session.user;
+      lastFetchTime = Date.now();
+      // Update localStorage cache
+      if (typeof window !== "undefined") {
+        localStorage.setItem(
+          "nutrimood_user",
+          JSON.stringify({
+            user: session.user,
+            timestamp: Date.now(),
+          })
+        );
+        sessionStorage.setItem("nutrimood_logged_in", "true");
+      }
+    }
+  }
+});
 
 // Helper untuk localStorage
 const getLocalUserCache = () => {
@@ -121,44 +217,99 @@ const getLocalUserCache = () => {
   return null;
 };
 
+// Flag to track if getUser is currently being executed to avoid infinite loops
+let isGettingUser = false;
+
 export const getUser = async () => {
   try {
     const now = Date.now();
+    console.log("[AUTH DEBUG] getUser called");
+
+    // Prevent recursive getUser calls
+    if (isGettingUser) {
+      console.log(
+        "[AUTH DEBUG] getUser already in progress, using cached data"
+      );
+      return cachedUser;
+    }
+
+    isGettingUser = true;
 
     // Cek flag "just logged out" untuk memastikan UI konsisten setelah logout
     if (
       typeof window !== "undefined" &&
-      sessionStorage.getItem("nutrimood_just_logged_out")
+      sessionStorage.getItem("nutrimood_just_logged_out") === "true"
     ) {
+      console.log("[AUTH DEBUG] Just logged out, returning null");
       sessionStorage.removeItem("nutrimood_just_logged_out");
       cachedUser = null;
       lastFetchTime = 0;
       return null;
     }
 
+    // Cek quick auth flag untuk fast loading
+    if (
+      typeof window !== "undefined" &&
+      sessionStorage.getItem("nutrimood_logged_in") === "true"
+    ) {
+      console.log("[AUTH DEBUG] Quick auth flag is set to logged in");
+    }
+
     // Prioritas 1: Cek memcache
     if (cachedUser && now - lastFetchTime < CACHE_TTL) {
+      console.log("[AUTH DEBUG] Using memory cache for user");
       return cachedUser;
     }
 
     // Prioritas 2: Cek localStorage
     const localCachedUser = getLocalUserCache();
     if (localCachedUser) {
+      console.log("[AUTH DEBUG] Using localStorage cache for user");
       cachedUser = localCachedUser;
       lastFetchTime = now;
+
+      // Trigger token refresh in background, don't await
+      setTimeout(() => {
+        refreshSession().catch((err) =>
+          console.error("[AUTH DEBUG] Background token refresh error:", err)
+        );
+      }, 0);
+
       return localCachedUser;
     }
 
     // Prioritas 3: Ambil dari server
+    console.log("[AUTH DEBUG] Fetching user from Supabase");
     const { data, error } = await supabase.auth.getUser();
-    if (error) throw error;
+
+    if (error) {
+      console.error("[AUTH DEBUG] Error from Supabase auth.getUser():", error);
+      throw error;
+    }
+
+    if (!data || !data.user) {
+      console.log("[AUTH DEBUG] No user data returned from Supabase");
+      cachedUser = null;
+      lastFetchTime = now;
+
+      // Hapus session flags jika tidak ada user
+      if (typeof window !== "undefined") {
+        sessionStorage.removeItem("nutrimood_logged_in");
+        localStorage.removeItem("nutrimood_user");
+      }
+
+      return null;
+    }
+
+    console.log("[AUTH DEBUG] User fetched successfully");
 
     // Update cache
-    cachedUser = data?.user;
+    cachedUser = data.user;
     lastFetchTime = now;
 
     // Juga simpan di localStorage untuk persistensi
     if (cachedUser && typeof window !== "undefined") {
+      console.log("[AUTH DEBUG] Saving user to localStorage");
       localStorage.setItem(
         "nutrimood_user",
         JSON.stringify({
@@ -166,19 +317,40 @@ export const getUser = async () => {
           timestamp: now,
         })
       );
-    }
 
+      // Set quick auth flag
+      sessionStorage.setItem("nutrimood_logged_in", "true");
+    }
     return cachedUser;
   } catch (error) {
-    console.error("Error getting user:", error);
+    console.error("[AUTH DEBUG] Error getting user:", error);
 
     // Jika error, coba gunakan cache sebagai fallback
     const localCachedUser = getLocalUserCache();
     if (localCachedUser) {
+      console.log("[AUTH DEBUG] Using fallback localStorage cache after error");
       return localCachedUser;
     }
 
-    throw error;
+    // Cek session storage flag
+    const quickLoginFlag =
+      typeof window !== "undefined" &&
+      sessionStorage.getItem("nutrimood_logged_in") === "true";
+
+    if (quickLoginFlag) {
+      console.log(
+        "[AUTH DEBUG] Quick login flag exists but no user data found"
+      );
+      // Jangan hapus flag, mungkin pengguna benar-benar login
+      // tapi ada masalah sementara dengan koneksi
+    }
+
+    // Jangan throw error, kembalikan null saja untuk UX yang lebih baik
+    console.log("[AUTH DEBUG] No fallback cache found, returning null");
+    return null;
+  } finally {
+    // Reset the flag to allow future calls
+    isGettingUser = false;
   }
 };
 

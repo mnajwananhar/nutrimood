@@ -19,7 +19,11 @@ const initAuthState = () => {
   if (typeof window === "undefined") return;
 
   // Set flag bahwa inisialisasi sudah dilakukan
-  if (window.__NUTRIMOOD_AUTH_INITIALIZED__) return;
+  if (window.__NUTRIMOOD_AUTH_INITIALIZED__) {
+    console.log("[AUTH DEBUG] Auth state already initialized");
+    return;
+  }
+  console.log("[AUTH DEBUG] Initializing auth state");
   window.__NUTRIMOOD_AUTH_INITIALIZED__ = true;
 
   try {
@@ -27,6 +31,9 @@ const initAuthState = () => {
     const justLoggedOut =
       sessionStorage.getItem("nutrimood_just_logged_out") === "true";
     if (justLoggedOut) {
+      console.log(
+        "[AUTH DEBUG] Logout flag detected, setting logged out state"
+      );
       authState.isLoggedIn = false;
       authState.user = null;
       return;
@@ -36,6 +43,7 @@ const initAuthState = () => {
     const quickLoginFlag =
       sessionStorage.getItem("nutrimood_logged_in") === "true";
     if (quickLoginFlag) {
+      console.log("[AUTH DEBUG] Quick login flag found during init");
       authState.isLoggedIn = true;
       // Data user akan diambil nanti
     }
@@ -46,12 +54,16 @@ const initAuthState = () => {
       try {
         const userData = JSON.parse(cachedUser);
         if (userData && userData.user) {
+          console.log("[AUTH DEBUG] Found cached user during init");
           authState.user = userData.user;
           authState.isLoggedIn = true;
           authState.lastChecked = userData.timestamp || Date.now();
 
           // Sync to sessionStorage for faster access
           sessionStorage.setItem("nutrimood_logged_in", "true");
+
+          // Log current authentication status
+          console.log("[AUTH DEBUG] Auth initialized with user from cache");
         }
       } catch (e) {
         console.error("Error parsing cached user:", e);
@@ -135,13 +147,17 @@ export const setAuthState = (user) => {
 export const getAuthState = () => {
   // Pastikan authState terinisialisasi di browser
   if (typeof window !== "undefined") {
+    console.log("[AUTH DEBUG] getAuthState called");
+
     // Re-init auth state jika belum dilakukan
     if (!window.__NUTRIMOOD_AUTH_INITIALIZED__) {
+      console.log("[AUTH DEBUG] Initializing auth state");
       initAuthState();
     }
 
     // Jika flag logout terdeteksi, prioritaskan
     if (sessionStorage.getItem("nutrimood_just_logged_out") === "true") {
+      console.log("[AUTH DEBUG] Just logged out flag detected");
       // Untuk keamanan, jangan menghapus flag di sini, biarkan komponen yang melakukannya
       authState.isLoggedIn = false;
       authState.user = null;
@@ -151,9 +167,28 @@ export const getAuthState = () => {
     // Cek quick login flag
     const quickLoginFlag =
       sessionStorage.getItem("nutrimood_logged_in") === "true";
-    if (quickLoginFlag && !authState.isLoggedIn) {
-      // Jika flag menunjukkan login tetapi memory state tidak
+    if (quickLoginFlag) {
+      console.log(
+        "[AUTH DEBUG] Quick login flag found, setting isLoggedIn=true"
+      );
+      // Jika flag menunjukkan login
       authState.isLoggedIn = true;
+
+      // Cek localStorage untuk data user jika belum ada di memory
+      if (!authState.user) {
+        try {
+          const cachedData = localStorage.getItem("nutrimood_user");
+          if (cachedData) {
+            const userData = JSON.parse(cachedData);
+            if (userData && userData.user) {
+              console.log("[AUTH DEBUG] Found user data in localStorage");
+              authState.user = userData.user;
+            }
+          }
+        } catch (e) {
+          console.error("[AUTH DEBUG] Error parsing cached user:", e);
+        }
+      }
     }
 
     // Cek sessionStorage untuk update dari tab lain
@@ -163,14 +198,22 @@ export const getAuthState = () => {
         const parsedState = JSON.parse(sessionAuthState);
         // Jika session storage lebih baru dari memory cache
         if (parsedState.timestamp > authState.lastChecked) {
+          console.log("[AUTH DEBUG] Updating auth state from sessionStorage");
           authState.isLoggedIn = parsedState.isLoggedIn;
           authState.lastChecked = parsedState.timestamp;
         }
       } catch (e) {
-        console.error("Error parsing auth state:", e);
+        console.error("[AUTH DEBUG] Error parsing auth state:", e);
       }
     }
   }
+
+  // Log state sebelum mengembalikan
+  console.log("[AUTH DEBUG] getAuthState returning:", {
+    isLoggedIn: authState.isLoggedIn,
+    hasUser: !!authState.user,
+    lastChecked: new Date(authState.lastChecked).toLocaleTimeString(),
+  });
 
   // Return copy of state
   return {
@@ -185,18 +228,27 @@ export const getAuthState = () => {
  */
 export const resetAuthState = () => {
   const prevState = authState.isLoggedIn;
+  console.log("[AUTH DEBUG] resetAuthState called");
 
+  // Reset memory state
   authState.isLoggedIn = false;
   authState.user = null;
   authState.lastChecked = 0;
 
   if (typeof window !== "undefined") {
+    // Hapus semua data auth dari storage
     sessionStorage.removeItem("nutrimood_auth_state");
+    sessionStorage.removeItem("nutrimood_logged_in");
+    localStorage.removeItem("nutrimood_user");
+
+    // Set flag logout
     sessionStorage.setItem("nutrimood_just_logged_out", "true");
+    console.log("[AUTH DEBUG] Auth flags cleared, logout flag set");
   }
 
   // Jika terjadi perubahan state, beritahu semua listener
   if (prevState) {
+    console.log("[AUTH DEBUG] Notifying listeners about logout");
     notifyListeners();
   }
 };
@@ -207,6 +259,11 @@ export const resetAuthState = () => {
 const notifyListeners = () => {
   try {
     const state = getAuthState();
+    console.log("[AUTH DEBUG] Notifying listeners of auth state change:", {
+      isLoggedIn: state.isLoggedIn,
+      hasUser: !!state.user,
+      listenersCount: listeners.length,
+    });
 
     // Tambahkan timestamp notifikasi untuk debugging
     const notifyState = {
@@ -214,12 +271,24 @@ const notifyListeners = () => {
       notifiedAt: Date.now(),
     };
 
+    // Sync sessionStorage flags berdasarkan state saat ini
+    if (typeof window !== "undefined") {
+      if (state.isLoggedIn) {
+        sessionStorage.setItem("nutrimood_logged_in", "true");
+        // Hapus flag logout jika ada
+        sessionStorage.removeItem("nutrimood_just_logged_out");
+      } else {
+        sessionStorage.removeItem("nutrimood_logged_in");
+      }
+    }
+
     // Beritahu semua listener yang terdaftar
-    listeners.forEach((listener) => {
+    listeners.forEach((listener, index) => {
       try {
+        console.log(`[AUTH DEBUG] Notifying listener #${index + 1}`);
         listener(notifyState);
       } catch (error) {
-        console.error("Error in auth state listener:", error);
+        console.error("[AUTH DEBUG] Error in auth state listener:", error);
       }
     });
 
@@ -244,23 +313,35 @@ const notifyListeners = () => {
  * @returns {Function} fungsi untuk unsubscribe
  */
 export const subscribeToAuthChanges = (callback) => {
+  console.log("[AUTH DEBUG] New auth state subscriber added");
+
   // Pastikan tidak mendaftarkan callback yang sama beberapa kali
   if (listeners.indexOf(callback) === -1) {
     listeners.push(callback);
+    console.log("[AUTH DEBUG] Total auth state subscribers:", listeners.length);
   }
 
   // Pastikan auth state sudah ter-inisialisasi sebelum memanggil callback
   if (typeof window !== "undefined" && !window.__NUTRIMOOD_AUTH_INITIALIZED__) {
+    console.log("[AUTH DEBUG] Initializing auth state for new subscriber");
     initAuthState();
   }
 
   // Panggil callback langsung dengan state saat ini
   const state = getAuthState();
+  console.log("[AUTH DEBUG] Calling new subscriber with current state:", {
+    isLoggedIn: state.isLoggedIn,
+    hasUser: !!state.user,
+  });
+
   setTimeout(() => {
     try {
       callback(state);
     } catch (error) {
-      console.error("Error calling initial auth state listener:", error);
+      console.error(
+        "[AUTH DEBUG] Error calling initial auth state listener:",
+        error
+      );
     }
   }, 0);
 

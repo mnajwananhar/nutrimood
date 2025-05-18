@@ -10,11 +10,13 @@ export async function middleware(req) {
     data: { session },
     error,
   } = await supabase.auth.getSession();
-
   // Debug: log session dan path untuk troubleshooting
-  console.log("MIDDLEWARE PATH:", req.nextUrl.pathname);
+  console.log("[AUTH DEBUG] MIDDLEWARE PATH:", req.nextUrl.pathname);
+  if (error) {
+    console.error("[AUTH DEBUG] Session error in middleware:", error.message);
+  }
   console.log(
-    "SESSION:",
+    "[AUTH DEBUG] SESSION:",
     session ? `User logged in: ${session.user.email}` : "No session"
   );
 
@@ -22,9 +24,11 @@ export async function middleware(req) {
   const protectedRoutes = [
     "/dashboard",
     "/dashboard/journal",
-    "/recommendation/result", // Ubah ini, hapus /recommendation dasar tapi tetap protect /recommendation/result
+    "/dashboard/education",
+    "/recommendation/result",
     "/profile",
-    "/education",
+    "/notifications",
+    "/education", // Semua rute edukasi memerlukan login
     "/community",
   ];
 
@@ -32,12 +36,18 @@ export async function middleware(req) {
   const isProtectedRoute = protectedRoutes.some((route) =>
     req.nextUrl.pathname.startsWith(route)
   );
-
   // Jika rute membutuhkan autentikasi dan user belum login
   if (isProtectedRoute && !session) {
-    console.log("REDIRECT: User not authenticated, redirecting to login");
+    console.log(
+      "[AUTH DEBUG] REDIRECT: User not authenticated, redirecting to login"
+    );
     const redirectUrl = new URL("/login", req.url);
     redirectUrl.searchParams.set("redirectedFrom", req.nextUrl.pathname);
+    // Tambahkan pesan error untuk ditampilkan
+    redirectUrl.searchParams.set(
+      "error",
+      "Silakan login untuk mengakses halaman ini"
+    );
     return NextResponse.redirect(redirectUrl);
   }
 
@@ -46,7 +56,9 @@ export async function middleware(req) {
     session &&
     (req.nextUrl.pathname === "/login" || req.nextUrl.pathname === "/register")
   ) {
-    console.log("REDIRECT: User already logged in, redirecting to dashboard");
+    console.log(
+      "[AUTH DEBUG] REDIRECT: User already logged in, redirecting to dashboard"
+    );
     return NextResponse.redirect(new URL("/dashboard", req.url));
   }
 

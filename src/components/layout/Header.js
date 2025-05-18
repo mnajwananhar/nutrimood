@@ -133,6 +133,12 @@ export default function Header() {
 
     let isMounted = true; // Tracking agar tidak update state jika component unmounted
 
+    // Prevent showing error alerts in header
+    sessionStorage.removeItem("nutrimood_error_shown");
+
+    // Import session manager
+    const sessionManager = require("@/lib/session-manager").default;
+
     // Fungsi untuk memeriksa status user
     const checkUser = async (skipLoading = false) => {
       try {
@@ -142,6 +148,9 @@ export default function Header() {
         // Cek apakah sedang dalam status logout
         const isLoggingOut =
           sessionStorage.getItem("nutrimood_just_logged_out") === "true";
+
+        // Memastikan session aktif dengan SessionManager
+        await sessionManager.checkSession();
 
         // Gunakan getUser yang sudah dioptimasi
         const userData = await getUser();
@@ -181,17 +190,31 @@ export default function Header() {
         }
       } catch (error) {
         console.error("[AUTH DEBUG] Error fetching user:", error.message);
+
+        // Coba lakukan pemeriksaan cepat dari sessionStorage
+        const quickLoginCheck =
+          sessionStorage.getItem("nutrimood_logged_in") === "true";
+        const cachedUser = getUserFromCache();
+
         if (isMounted) {
-          setUser(null);
-          setIsLoading(false);
-          saveUserToCache(null);
-          resetAuthState();
-          sessionStorage.removeItem("nutrimood_logged_in");
+          if (quickLoginCheck && cachedUser) {
+            // Jika ada cache dan flag login di session, gunakan itu
+            console.log("[AUTH DEBUG] Header - using cached user after error");
+            setUser(cachedUser);
+            setIsLoading(false);
+            setAuthState(cachedUser);
+          } else {
+            // Tidak ada cache yang bisa digunakan
+            console.log("[AUTH DEBUG] Header - no cache to fallback to");
+            setUser(null);
+            setIsLoading(false);
+            saveUserToCache(null);
+            resetAuthState();
+            sessionStorage.removeItem("nutrimood_logged_in");
+          }
         }
       }
-    };
-
-    // Lakukan pemeriksaan awal
+    }; // Lakukan pemeriksaan awal
     checkUser();
 
     // Pemeriksaan kedua setelah delay untuk mengatasi masalah timing
@@ -200,7 +223,9 @@ export default function Header() {
         console.log("[AUTH DEBUG] Running second auth check");
         checkUser(true); // Skip loading pada pemeriksaan kedua
       }
-    }, 800); // Menambah delay untuk memastikan getUser() sempat dijalankan    // Subscribe ke event perubahan auth state global
+    }, 800); // Menambah delay untuk memastikan getUser() sempat dijalankan
+
+    // Subscribe ke event perubahan auth state global
     const unsubscribeAuthChanges = subscribeToAuthChanges((newAuthState) => {
       // Hanya update jika component masih mounted
       if (isMounted) {
@@ -221,11 +246,10 @@ export default function Header() {
           sessionStorage.removeItem("nutrimood_logged_in");
         }
       }
-    });
-    // Subscribe ke event auth Supabase
+    }); // Subscribe ke event auth Supabase dengan integrasi SessionManager
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
       // Hanya update jika component masih mounted
       if (isMounted) {
         console.log(
@@ -233,9 +257,15 @@ export default function Header() {
           _event,
           session ? "session exists" : "no session"
         );
+
+        // Referensi ke session manager
+        const sessionManager = require("@/lib/session-manager").default;
         const currentUser = session?.user ?? null;
 
         if (_event === "SIGNED_IN" && currentUser) {
+          // Sync dengan session manager
+          sessionManager.handleSignIn(session);
+
           // Update state dan cache untuk login
           console.log("[AUTH DEBUG] User signed in, updating state");
           setUser(currentUser);
@@ -244,6 +274,9 @@ export default function Header() {
           setAuthState(currentUser);
           sessionStorage.setItem("nutrimood_logged_in", "true");
         } else if (_event === "SIGNED_OUT" || _event === "USER_DELETED") {
+          // Sync dengan session manager
+          sessionManager.handleSignOut();
+
           // Update untuk logout
           console.log("[AUTH DEBUG] User signed out, clearing state");
           setUser(null);
@@ -252,6 +285,9 @@ export default function Header() {
           resetAuthState();
           sessionStorage.removeItem("nutrimood_logged_in");
         } else if (_event === "TOKEN_REFRESHED" && currentUser) {
+          // Sync dengan session manager
+          sessionManager.handleTokenRefresh(session);
+
           // Update saat token diperbarui
           console.log("[AUTH DEBUG] Token refreshed, updating state");
           setUser(currentUser);
@@ -336,7 +372,6 @@ export default function Header() {
     { name: "Fitur", href: "/#features" },
     { name: "Kontak", href: "/contact" },
   ];
-
   // Link untuk pengguna yang sudah login
   const authLinks = [
     { name: "Dashboard", href: "/dashboard" },

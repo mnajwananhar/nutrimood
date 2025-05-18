@@ -5,6 +5,7 @@ import { Inter } from "next/font/google";
 import { Geist, Geist_Mono } from "next/font/google";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import SessionInitializer from "@/components/SessionInitializer";
 import { cssVariables } from "@/lib/theme";
 import "./globals.css";
 
@@ -100,6 +101,7 @@ export default function RootLayout({ children }) {
         </button>
 
         {/* Layout with Header, Main content, and Footer */}
+        <SessionInitializer />
         <Header />
         <main className="flex-grow">{children}</main>
         <Footer />
