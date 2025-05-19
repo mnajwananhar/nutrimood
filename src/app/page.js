@@ -89,16 +89,7 @@ export default function Home() {
             <div className="inline-flex rounded-md shadow">
               <Link
                 href="/register"
-                className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-primary-600 bg-white hover:bg-gray-50"
-              >
-                Daftar Sekarang
-              </Link>
-            </div>
-            <div className="ml-3 inline-flex rounded-md shadow">
-              <Link
-                href="#how-it-works"
-                scroll={true}
-                className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-primary-600 bg-white hover:bg-gray-50"
+                className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-600 dark:text-white"
               >
                 Daftar Sekarang
               </Link>
@@ -106,7 +97,7 @@ export default function Home() {
             <div className="ml-3 inline-flex rounded-md shadow">
               <Link
                 href="/recommendation"
-                className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-primary-600 hover:bg-primary-500"
+                className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-secondary-600 hover:bg-secondary-700 dark:bg-secondary-500 dark:hover:bg-secondary-600 dark:text-white"
               >
                 Coba Demo
               </Link>
@@ -404,9 +395,9 @@ export default function Home() {
                 </div>
               </div>
               <p className="text-gray-600 dark:text-gray-300 italic">
-                "NutriMood sangat membantu saya memilih makanan yang tepat saat
-                saya merasa stres. Rekomendasi dari aplikasi ini terbukti
-                memperbaiki mood saya."
+                &quot;NutriMood sangat membantu saya memilih makanan yang tepat
+                saat saya merasa stres. Rekomendasi dari aplikasi ini terbukti
+                memperbaiki mood saya.&quot;
               </p>
               <div className="mt-4 flex">
                 {[...Array(5)].map((_, i) => (
@@ -439,10 +430,10 @@ export default function Home() {
                 </div>
               </div>
               <p className="text-gray-600 dark:text-gray-300 italic">
-                "Sebagai penderita diabetes, saya kesulitan menemukan makanan
-                yang tidak memperburuk kondisi saya. NutriMood membantu dengan
-                rekomendasi makanan sehat yang sesuai dengan kondisi kesehatan
-                saya."
+                &quot;Sebagai penderita diabetes, saya kesulitan menemukan
+                makanan yang tidak memperburuk kondisi saya. NutriMood membantu
+                dengan rekomendasi makanan sehat yang sesuai dengan kondisi
+                kesehatan saya.&quot;
               </p>
               <div className="mt-4 flex">
                 {[...Array(5)].map((_, i) => (
@@ -475,9 +466,9 @@ export default function Home() {
                 </div>
               </div>
               <p className="text-gray-600 dark:text-gray-300 italic">
-                "Jurnal makanan di NutriMood membantu saya melihat pola antara
-                apa yang saya makan dan bagaimana perasaan saya. Ini sangat
-                membantu saat menjalani ujian yang menegangkan."
+                &quot;Jurnal makanan di NutriMood membantu saya melihat pola
+                antara apa yang saya makan dan bagaimana perasaan saya. Ini
+                sangat membantu saat menjalani ujian yang menegangkan.&quot;
               </p>
               <div className="mt-4 flex">
                 {[...Array(5)].map((_, i) => (
