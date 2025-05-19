@@ -1,9 +1,17 @@
 "use client";
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter, useSearchParams } from "next/navigation";
 
-export default function ResetPasswordPage() {
+export default function ResetPasswordPageWrapper() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Memuat...</div>}>
+      <ResetPasswordPage />
+    </Suspense>
+  );
+}
+
+function ResetPasswordPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");

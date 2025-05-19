@@ -1,12 +1,20 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import Link from "next/link";
 import Image from "next/image";
 
-export default function RecommendationResult() {
+export default function RecommendationResultWrapper() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Memuat...</div>}>
+      <RecommendationResult />
+    </Suspense>
+  );
+}
+
+function RecommendationResult() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const supabase = createClientComponentClient();
