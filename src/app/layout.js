@@ -60,19 +60,41 @@ export default function RootLayout({ children }) {
         <meta name="theme-color" content="#2563eb" />
         <link rel="manifest" href="/manifest.json" />
         <link rel="icon" href="/icons/icon-192x192.png" />
-        <link rel="apple-touch-icon" sizes="192x192" href="/icons/icon-192x192.png" />
-        <link rel="apple-touch-icon" sizes="256x256" href="/icons/icon-256x256.png" />
-        <link rel="apple-touch-icon" sizes="384x384" href="/icons/icon-384x384.png" />
-        <link rel="apple-touch-icon" sizes="512x512" href="/icons/icon-512x512.png" />
+        <link
+          rel="apple-touch-icon"
+          sizes="192x192"
+          href="/icons/icon-192x192.png"
+        />
+        <link
+          rel="apple-touch-icon"
+          sizes="256x256"
+          href="/icons/icon-256x256.png"
+        />
+        <link
+          rel="apple-touch-icon"
+          sizes="384x384"
+          href="/icons/icon-384x384.png"
+        />
+        <link
+          rel="apple-touch-icon"
+          sizes="512x512"
+          href="/icons/icon-512x512.png"
+        />
         <link rel="apple-touch-startup-image" href="/icons/icon-512x512.png" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="application-name" content="NutriMood" />
         <meta name="apple-mobile-web-app-title" content="NutriMood" />
-        <meta name="description" content="Aplikasi rekomendasi makanan berbasis mood dan kesehatan." />
+        <meta
+          name="description"
+          content="Aplikasi rekomendasi makanan berbasis mood dan kesehatan."
+        />
         <meta name="msapplication-TileColor" content="#2563eb" />
-        <meta name="msapplication-TileImage" content="/icons/icon-192x192.png" />
+        <meta
+          name="msapplication-TileImage"
+          content="/icons/icon-192x192.png"
+        />
         {/* Menambahkan CSS variables */}
         <style>{cssVariables}</style>
       </head>

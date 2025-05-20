@@ -409,6 +409,62 @@ export default function Header() {
     { name: "Komunitas", href: "/community" },
   ];
 
+  // Tombol Masuk & Daftar (desktop)
+  // Tempatkan di bagian render public (belum login)
+  const renderAuthButtons = (
+    <>
+      <Link
+        href="/login"
+        className="inline-flex items-center justify-center px-4 py-2 text-sm font-semibold rounded-md text-primary-600 bg-white hover:bg-primary-600 hover:text-white dark:bg-neutral-800 dark:text-primary-400 dark:hover:bg-primary-500 dark:hover:text-white focus:outline-none focus:ring-0 shadow-sm transition-colors"
+        style={{
+          minWidth: 90,
+          letterSpacing: 0.2,
+          transition: "background 0.2s, color 0.2s",
+        }}
+      >
+        Masuk
+      </Link>
+      <Link
+        href="/register"
+        className="inline-flex items-center justify-center px-4 py-2 text-sm font-semibold rounded-md text-white bg-primary-600 hover:bg-white hover:text-primary-600 dark:bg-primary-500 dark:text-white dark:hover:bg-neutral-800 dark:hover:text-primary-400 focus:outline-none focus:ring-0 shadow-sm transition-colors"
+        style={{
+          minWidth: 90,
+          letterSpacing: 0.2,
+          transition: "background 0.2s, color 0.2s",
+        }}
+      >
+        Daftar
+      </Link>
+    </>
+  );
+
+  const renderAuthButtonsMobile = (
+    <div className="space-y-2">
+      <Link
+        href="/login"
+        className="w-full flex justify-center py-2 px-4 rounded-md shadow-sm text-sm font-semibold text-primary-600 bg-white hover:bg-primary-600 hover:text-white dark:bg-neutral-800 dark:text-primary-400 dark:hover:bg-primary-500 dark:hover:text-white focus:outline-none focus:ring-0 transition-colors"
+        style={{
+          letterSpacing: 0.2,
+          transition: "background 0.2s, color 0.2s",
+        }}
+        onClick={() => setIsMenuOpen(false)}
+      >
+        Masuk
+      </Link>
+      <Link
+        href="/register"
+        className="w-full flex justify-center py-2 px-4 rounded-md shadow-sm text-sm font-semibold text-white bg-primary-600 hover:bg-white hover:text-primary-600 dark:bg-primary-500 dark:text-white dark:hover:bg-neutral-800 dark:hover:text-primary-400 focus:outline-none focus:ring-0 transition-colors"
+        style={{
+          letterSpacing: 0.2,
+          transition: "background 0.2s, color 0.2s",
+        }}
+        onClick={() => setIsMenuOpen(false)}
+      >
+        Daftar
+      </Link>
+    </div>
+  );
+
   return (
     <header className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-gray-200 dark:bg-neutral-900/80 dark:border-neutral-800">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -495,20 +551,7 @@ export default function Header() {
               <div className="h-8 w-20 bg-gray-200 animate-pulse rounded-md"></div>
             ) : (
               /* Hanya tampilkan tombol login/register jika benar-benar tidak ada user dan sudah selesai loading */
-              <>
-                <Link
-                  href="/login"
-                  className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-primary-600 bg-white hover:bg-gray-50 dark:bg-transparent dark:text-primary-400 dark:border-primary-500 dark:hover:bg-primary-900/20"
-                >
-                  Masuk
-                </Link>
-                <Link
-                  href="/register"
-                  className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700"
-                >
-                  Daftar
-                </Link>
-              </>
+              renderAuthButtons
             )}
           </div>
           {/* Mobile menu button */}
@@ -645,22 +688,7 @@ export default function Header() {
                 </div>
               ) : (
                 /* Hanya tampilkan tombol login/register jika benar-benar tidak ada user */
-                <div className="space-y-2">
-                  <Link
-                    href="/login"
-                    className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-primary-600 bg-white hover:bg-gray-50 dark:bg-transparent dark:text-primary-400 dark:border-primary-500 dark:hover:bg-primary-900/20"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Masuk
-                  </Link>
-                  <Link
-                    href="/register"
-                    className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Daftar
-                  </Link>
-                </div>
+                renderAuthButtonsMobile
               )}
             </div>
           </div>

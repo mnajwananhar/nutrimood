@@ -9,12 +9,7 @@
   "orientation": "portrait",
   "scope": "/",
   "id": "/",
-  "categories": [
-    "health",
-    "food",
-    "lifestyle",
-    "productivity"
-  ],
+  "categories": ["health", "food", "lifestyle", "productivity"],
   "lang": "id",
   "dir": "ltr",
   "prefer_related_applications": false,

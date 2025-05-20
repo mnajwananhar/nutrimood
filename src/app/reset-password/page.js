@@ -5,7 +5,13 @@ import { useRouter, useSearchParams } from "next/navigation";
 
 export default function ResetPasswordPageWrapper() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Memuat...</div>}>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          Memuat...
+        </div>
+      }
+    >
       <ResetPasswordPage />
     </Suspense>
   );
