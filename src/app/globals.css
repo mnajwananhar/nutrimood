@@ -19,6 +19,18 @@
   }
 }
 
+html.dark {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+  color-scheme: dark;
+}
+
+html.light {
+  --background: #ffffff;
+  --foreground: #171717;
+  color-scheme: light;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
@@ -92,14 +104,41 @@ body {
   );
 }
 
+/* Animasi transisi untuk tema */
+@keyframes theme-fade-in {
+  0% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
 /* Animasi transisi untuk perubahan tema */
 * {
-  transition: background-color 0.3s, border-color 0.3s;
+  transition: background-color 0.3s ease, border-color 0.3s ease,
+    color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Animasi pada perubahan tema */
+html.dark,
+html.light {
+  animation: theme-fade-in 0.5s ease forwards;
+}
+
+/* Prioritaskan transisi tema */
+html.dark {
+  color-scheme: dark;
+}
+
+html.light {
+  color-scheme: light;
 }
 
 /* Override untuk tailwind dark mode */
 .dark body {
-  @apply bg-neutral-950 text-white;
+  background-color: rgb(2, 6, 23); /* bg-neutral-950 */
+  color: white;
 }
 
 /* Styling untuk scrollbar */

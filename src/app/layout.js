@@ -21,9 +21,25 @@ const geistMono = Geist_Mono({
 });
 
 export default function RootLayout({ children }) {
-  const [theme, setTheme] = useState("light");
+  // Gunakan useState dengan function initializer untuk menghindari hydration mismatch
+  const [theme, setTheme] = useState(() => {
+    // Kode ini hanya akan dieksekusi di client-side
+    if (typeof window !== "undefined") {
+      // Cek tema dari localStorage
+      const savedTheme = localStorage.getItem("theme");
+      if (savedTheme) {
+        return savedTheme;
+      } else if (
+        window.matchMedia &&
+        window.matchMedia("(prefers-color-scheme: dark)").matches
+      ) {
+        return "dark";
+      }
+    }
+    return "light"; // Default fallback untuk server-side rendering
+  });
 
-  // Mendeteksi dan mengatur tema berdasarkan preferensi sistem
+  // Effect untuk mendeteksi perubahan preferensi sistem
   useEffect(() => {
     if (typeof window !== "undefined") {
       // Cek tema dari localStorage
@@ -41,17 +57,57 @@ export default function RootLayout({ children }) {
   const toggleTheme = () => {
     const newTheme = theme === "light" ? "dark" : "light";
     setTheme(newTheme);
-    localStorage.setItem("theme", newTheme);
+
+    try {
+      // Simpan ke localStorage
+      localStorage.setItem("theme", newTheme);
+
+      // Terapkan langsung ke dokumen untuk feedback instan
+      if (newTheme === "dark") {
+        document.documentElement.classList.add("dark");
+        document.documentElement.classList.remove("light");
+      } else {
+        document.documentElement.classList.add("light");
+        document.documentElement.classList.remove("dark");
+      }
+    } catch (error) {
+      console.error("Error menyimpan tema:", error);
+    }
   };
 
   // Menerapkan tema ke elemen html
   useEffect(() => {
+    // Perubahan tema yang lebih reaktif
     if (theme === "dark") {
       document.documentElement.classList.add("dark");
+      document.documentElement.classList.remove("light");
     } else {
+      document.documentElement.classList.add("light");
       document.documentElement.classList.remove("dark");
     }
   }, [theme]);
+
+  // Menambahkan script untuk mendeteksi tema dari localStorage sebelum render
+  // untuk menghindari flash of unstyled content
+  const themeScript = `
+    (function() {
+      try {
+        let persistedTheme = localStorage.getItem('theme');
+        let prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        
+        if (persistedTheme === 'dark' || (!persistedTheme && prefersDark)) {
+          document.documentElement.classList.add('dark');
+          document.documentElement.classList.remove('light');
+        } else {
+          document.documentElement.classList.add('light');
+          document.documentElement.classList.remove('dark');
+        }
+      } catch (err) {
+        // Fallback jika localStorage tidak tersedia
+        document.documentElement.classList.add('light');
+      }
+    })()
+  `;
 
   return (
     <html lang="id" className={`${geistSans.variable} ${geistMono.variable}`}>
@@ -97,18 +153,23 @@ export default function RootLayout({ children }) {
         />
         {/* Menambahkan CSS variables */}
         <style>{cssVariables}</style>
+        {/* Script untuk menerapkan tema sebelum render untuk menghindari flicker */}
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body className="min-h-screen flex flex-col bg-white dark:bg-neutral-950 text-neutral-900 dark:text-white">
         {/* Theme Toggle Button */}
         <button
           onClick={toggleTheme}
-          className="fixed bottom-4 right-4 z-50 p-2 rounded-full bg-white dark:bg-neutral-800 shadow-lg border border-gray-200 dark:border-neutral-700"
+          className="fixed bottom-4 right-4 z-50 p-3 rounded-full bg-white dark:bg-neutral-800 shadow-lg border border-gray-200 dark:border-neutral-700 transition-all duration-300 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-primary-500 hover:shadow-xl"
           aria-label="Toggle Theme"
+          title={
+            theme === "light" ? "Aktifkan Mode Gelap" : "Aktifkan Mode Terang"
+          }
         >
           {theme === "light" ? (
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5 text-neutral-800"
+              className="h-5 w-5 text-neutral-800 transition-transform duration-300 ease-in-out"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -123,7 +184,7 @@ export default function RootLayout({ children }) {
           ) : (
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5 text-yellow-400"
+              className="h-5 w-5 text-yellow-400 transition-transform duration-300 ease-in-out animate-[spin_1s_ease-in-out]"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"

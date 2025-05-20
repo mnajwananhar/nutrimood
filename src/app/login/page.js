@@ -192,13 +192,11 @@ function Login() {
               </button>
             </div>
           </div>
-
           {error && (
             <div className="text-red-500 text-sm bg-red-50 dark:bg-red-900/20 p-3 rounded-md">
               {error}
             </div>
           )}
-
           <div className="flex items-center justify-between">
             <div className="flex items-center">
               <input
@@ -223,7 +221,10 @@ function Login() {
                 Lupa password?
               </Link>
             </div>
-          </div>          <div>            <button
+          </div>{" "}
+          <div>
+            {" "}
+            <button
               type="submit"
               disabled={loading}
               className="group relative w-full flex justify-center py-2 px-4 border border-gray-300 dark:border-neutral-600 rounded-md shadow-sm bg-primary-600 hover:bg-primary-700 text-sm font-medium text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none"
